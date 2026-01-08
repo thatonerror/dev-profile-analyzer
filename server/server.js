@@ -83,7 +83,8 @@ app.get('/', (req, res) => {
       leetcode: '/api/leetcode/:username', 
       hackerrank: '/api/hackerrank/:username',
       upload: '/api/upload (POST multipart)',
-      analyze: '/api/analyze (POST)'
+      analyze: '/api/analyze (POST)',
+      chat: '/api/chat'
     }
   });
 });
@@ -92,8 +93,9 @@ app.get('/', (req, res) => {
 app.use('/api/github', require('./routes/github'));
 app.use('/api/leetcode', require('./routes/leetcode'));
 app.use('/api/hackerrank', require('./routes/hackerrank'));
+app.use('/api/chat', require('./routes/chat'));
 
-// ✅ IMPORTANT: Upload route with multer middleware HERE
+// ✅ Upload route with multer middleware
 app.use('/api/upload', upload.single('resume'), require('./routes/upload'));
 
 app.use('/api/analyze', require('./routes/analyze'));
