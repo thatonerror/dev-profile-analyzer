@@ -4,7 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000, // 15 seconds
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -35,29 +35,45 @@ export const fetchLeetcodeStats = async (username) => {
     apiClient.get(`/leetcode/${username}`).then(res => res.data)
   );
 };
-// Add HackerRank function
+
+// HackerRank API - Fixed
 export const fetchHackerrankStats = async (username) => {
   return fetchWithRetry(() => 
     apiClient.get(`/hackerrank/${username}`).then(res => res.data)
   );
 };
 
-// Resume Upload
+// Resume Upload - Fixed
 export const uploadResume = async (file) => {
   const formData = new FormData();
-  formData.append('resume', file);
+  formData.append('resume', file); // Match backend field name
+  
+  console.log('📤 Uploading file:', file.name, file.size, 'bytes');
   
   return apiClient.post('/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: 30000, // 30 seconds for file upload
-  }).then(res => res.data);
+    headers: { 
+      'Content-Type': 'multipart/form-data'
+    },
+    timeout: 30000, // 30 seconds for large files
+    onUploadProgress: (progressEvent) => {
+      const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+      console.log('Upload progress:', percentCompleted + '%');
+    }
+  }).then(res => {
+    console.log('✅ Upload response:', res.data);
+    return res.data;
+  }).catch(err => {
+    console.error('❌ Upload error:', err.response?.data || err.message);
+    throw err;
+  });
 };
 
 // AI Analysis
-export const analyzeProfile = async (resumeData, githubData, leetcodeData) => {
+export const analyzeProfile = async (resumeData, githubData, leetcodeData, hackerrankData) => {
   return apiClient.post('/analyze', { 
     resumeData, 
     githubData, 
-    leetcodeData 
+    leetcodeData,
+    hackerrankData
   }).then(res => res.data);
 };

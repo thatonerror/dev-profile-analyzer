@@ -1,51 +1,43 @@
 const express = require('express');
-const multer = require('multer');
 const { parseResume } = require('../utils/parser');
 const router = express.Router();
 
-// Configure multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf' || 
-        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        file.originalname.match(/\.(pdf|docx|doc)$/i)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF and DOCX files allowed!'), false);
-    }
-  }
-});
-
-// Upload and parse resume
-router.post('/', upload.single('resume'), async (req, res) => {
+// NOTE: multer middleware is applied in server.js
+router.post('/', async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
+    console.log('📤 Upload request received');
+    console.log('📁 File:', req.file);
     
-    const parsedData = await parseResume(req.file.path, req.file.mimetype);
+    if (!req.file) {
+      console.error('❌ No file in request');
+      return res.status(400).json({ 
+        error: 'No file uploaded',
+        details: 'Please select a PDF or DOCX file'
+      });
+    }
+
+    console.log('✅ File uploaded:', {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      size: req.file.size,
+      path: req.file.path
+    });
+    
+    // Parse the resume
+    const parsedData = await parseResume(req.file.path);
     
     res.json({
       success: true,
       filename: req.file.originalname,
-      size: req.file.size,
       parsedData
     });
     
   } catch (error) {
-    console.error('Upload Error:', error.message);
-    res.status(500).json({ error: 'Failed to parse resume: ' + error.message });
+    console.error('❌ Upload failed:', error);
+    res.status(500).json({ 
+      error: 'Failed to process resume',
+      details: error.message 
+    });
   }
 });
 

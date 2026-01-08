@@ -1,7 +1,6 @@
 var fs = require("fs");
 var url = require("url");
 var os = require("os");
-var dirname = require("path").dirname;
 var resolvePath = require("path").resolve;
 var isAbsolutePath = require('path-is-absolute');
 
@@ -12,18 +11,7 @@ exports.Files = Files;
 exports.uriToPath = uriToPath;
 
 
-function Files(options) {
-    options = options || {};
-    if (!options.externalFileAccess) {
-        return {
-            read: function(uri) {
-                return promises.reject(new Error("could not read external image '" + uri + "', external file access is disabled"));
-            }
-        };
-    }
-
-    var base = options.relativeToFile ? dirname(options.relativeToFile) : null;
-
+function Files(base) {
     function read(uri, encoding) {
         return resolveUri(uri).then(function(path) {
             return readFile(path, encoding).caught(function(error) {
@@ -32,7 +20,7 @@ function Files(options) {
             });
         });
     }
-
+    
     function resolveUri(uri) {
         var path = uriToPath(uri);
         if (isAbsolutePath(path)) {
@@ -43,12 +31,11 @@ function Files(options) {
             return promises.reject(new Error("could not find external image '" + uri + "', path of input document is unknown"));
         }
     }
-
+    
     return {
         read: read
     };
 }
-
 
 var readFile = promises.promisify(fs.readFile.bind(fs));
 
@@ -57,7 +44,7 @@ function uriToPath(uriString, platform) {
     if (!platform) {
         platform = os.platform();
     }
-
+    
     var uri = url.parse(uriString);
     if (isLocalFileUri(uri) || isRelativeUri(uri)) {
         var path = decodeURIComponent(uri.path);

@@ -1,63 +1,62 @@
-
-const StatsDisplay = ({ githubData, leetcodeData }) => {
-  if (!githubData && !leetcodeData) return null;
+// StatsDisplay Component
+const StatsDisplay = ({ githubData, leetcodeData, hackerrankData }) => {
+  if (!githubData && !leetcodeData && !hackerrankData) return null;
 
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-      <h2 className="text-2xl font-bold mb-8 text-center">📊 Profile Stats</h2>
+    <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl">
+      <h2 className="text-xl sm:text-2xl font-semibold text-center mb-6 sm:mb-8 text-gray-100">
+        Profile Analytics
+      </h2>
       
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* GitHub Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {githubData && (
-          <div className="bg-gradient-to-br from-gray-800/80 to-gray-700/80 p-6 rounded-xl">
-            <div className="flex items-center mb-6">
-              <img 
-                src={githubData.avatar} 
-                alt="avatar" 
-                className="w-14 h-14 rounded-xl mr-4"
-              />
-              <div>
-                <h3 className="text-2xl font-bold">{githubData.name || githubData.username}</h3>
-                <p className="text-gray-300">@{githubData.username}</p>
+          <div className="bg-gray-800 border border-gray-700 p-4 sm:p-6 rounded-xl hover:shadow-xl transition-all">
+            <div className="flex items-center mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-950 rounded-xl flex items-center justify-center mr-3 sm:mr-4 font-bold text-xs sm:text-sm text-white flex-shrink-0">
+                GH
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg sm:text-xl font-semibold truncate text-gray-100">
+                  {githubData.name || githubData.username}
+                </h3>
+                <p className="text-gray-400 text-xs sm:text-sm truncate">
+                  @{githubData.username}
+                </p>
               </div>
             </div>
             
-            <div className="space-y-4 mb-8">
-              <div className="flex justify-between items-end">
-                <span className="text-gray-300">Public Repos</span>
-                <span className="font-black text-3xl text-white">{githubData.publicRepos}</span>
+            <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-xs sm:text-sm">Repos</span>
+                <span className="text-xl sm:text-2xl font-bold text-gray-100">{githubData.publicRepos}</span>
               </div>
-              <div className="flex justify-between items-end">
-                <span className="text-gray-300">Total Stars</span>
-                <span className="font-black text-3xl text-yellow-400">{githubData.totalStars.toLocaleString()}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-xs sm:text-sm">Stars</span>
+                <span className="text-xl sm:text-2xl font-bold text-yellow-400">
+                  {githubData.totalStars.toLocaleString()}
+                </span>
               </div>
-              <div className="flex justify-between items-end">
-                <span className="text-gray-300">Followers</span>
-                <span className="font-black text-3xl text-blue-400">{githubData.followers.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-lg mb-4">🏷️ Top Languages</h4>
-              <div className="flex flex-wrap gap-2">
-                {githubData.topLanguages?.slice(0, 5).map((lang, idx) => (
-                  <span key={idx} className="px-4 py-2 bg-white/20 rounded-full text-sm font-medium">
-                    {lang.language} <span className="text-gray-300">({lang.count})</span>
-                  </span>
-                ))}
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-xs sm:text-sm">Followers</span>
+                <span className="text-xl sm:text-2xl font-bold text-gray-100">
+                  {githubData.followers.toLocaleString()}
+                </span>
               </div>
             </div>
 
-            {githubData.repos?.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-white/20">
-                <h5 className="font-semibold mb-3">⭐ Top Repos</h5>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {githubData.repos.slice(0, 3).map((repo, idx) => (
-                    <a key={idx} href={repo.url} target="_blank" rel="noopener noreferrer" className="block p-3 bg-white/10 rounded-lg hover:bg-white/20 transition-all">
-                      <div className="font-semibold">{repo.name}</div>
-                      <div className="text-sm text-gray-300">{repo.description || 'No description'}</div>
-                      <div className="text-xs text-yellow-400 mt-1">⭐ {repo.stars}</div>
-                    </a>
+            {githubData.topLanguages?.length > 0 && (
+              <div className="pt-3 sm:pt-4 border-t border-gray-700">
+                <h4 className="font-semibold text-xs sm:text-sm mb-2 sm:mb-3 text-gray-300">
+                  Top Languages
+                </h4>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  {githubData.topLanguages.slice(0, 4).map((lang, idx) => (
+                    <span 
+                      key={idx} 
+                      className="px-2 sm:px-3 py-1 bg-gray-700 text-xs rounded-full border border-gray-600 text-gray-200"
+                    >
+                      {lang.language}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -65,54 +64,109 @@ const StatsDisplay = ({ githubData, leetcodeData }) => {
           </div>
         )}
 
-        {/* LeetCode Stats */}
         {leetcodeData && (
-          <div className="bg-gradient-to-br from-[#F48024]/80 to-[#EF2929]/80 p-6 rounded-xl">
-            <div className="flex items-center mb-6">
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mr-4">
-                <span className="text-3xl font-black text-[#F48024]">LC</span>
+          <div className="bg-gray-800 border border-gray-700 p-4 sm:p-6 rounded-xl hover:shadow-xl transition-all">
+            <div className="flex items-center mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-950 rounded-xl flex items-center justify-center mr-3 sm:mr-4 font-bold text-xs sm:text-sm text-green-400 flex-shrink-0">
+                LC
               </div>
-              <div>
-                <h3 className="text-2xl font-bold">{leetcodeData.username}</h3>
-                <p className="text-gray-200">Competitive Programmer</p>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg sm:text-xl font-semibold truncate text-gray-100">
+                  {leetcodeData.username}
+                </h3>
+                <p className="text-gray-400 text-xs sm:text-sm">Competitive Programming</p>
               </div>
             </div>
             
-            <div className="space-y-6">
-              <div className="flex justify-between items-end">
-                <span className="text-gray-200">Total Solved</span>
-                <span className="font-black text-4xl text-white">{leetcodeData.totalSolved.toLocaleString()}</span>
+            <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+              <div className="text-center p-3 sm:p-4 bg-gray-700 rounded-xl">
+                <div className="text-2xl sm:text-3xl font-bold text-gray-100">
+                  {leetcodeData.totalSolved.toLocaleString()}
+                </div>
+                <div className="text-xs sm:text-sm text-gray-400">Total Solved</div>
               </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-green-500/30 p-4 rounded-xl text-center border border-green-500/50">
-                  <div className="text-sm font-medium text-green-200 opacity-90">Easy</div>
-                  <div className="font-black text-2xl text-green-400">{leetcodeData.easySolved}</div>
-                </div>
-                <div className="bg-yellow-500/30 p-4 rounded-xl text-center border border-yellow-500/50">
-                  <div className="text-sm font-medium text-yellow-200 opacity-90">Medium</div>
-                  <div className="font-black text-2xl text-yellow-400">{leetcodeData.mediumSolved}</div>
-                </div>
-                <div className="bg-red-500/30 p-4 rounded-xl text-center border border-red-500/50">
-                  <div className="text-sm font-medium text-red-200 opacity-90">Hard</div>
-                  <div className="font-black text-2xl text-red-400">{leetcodeData.hardSolved}</div>
-                </div>
-              </div>
-              
-              {leetcodeData.ranking && (
-                <div className="bg-black/40 p-4 rounded-xl text-center">
-                  <span className="text-gray-300 font-medium">Global Rank</span>
-                  <div className="font-black text-2xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    #{leetcodeData.ranking}
-                  </div>
-                </div>
-              )}
             </div>
+
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="p-2 sm:p-3 bg-green-900/30 border border-green-900/50 rounded-lg text-center">
+                <div className="text-lg sm:text-xl font-bold text-green-400">
+                  {leetcodeData.easySolved}
+                </div>
+                <div className="text-xs text-gray-400">Easy</div>
+              </div>
+              <div className="p-2 sm:p-3 bg-yellow-900/30 border border-yellow-900/50 rounded-lg text-center">
+                <div className="text-lg sm:text-xl font-bold text-yellow-400">
+                  {leetcodeData.mediumSolved}
+                </div>
+                <div className="text-xs text-gray-400">Medium</div>
+              </div>
+              <div className="p-2 sm:p-3 bg-red-900/30 border border-red-900/50 rounded-lg text-center">
+                <div className="text-lg sm:text-xl font-bold text-red-400">
+                  {leetcodeData.hardSolved}
+                </div>
+                <div className="text-xs text-gray-400">Hard</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {hackerrankData && (
+          <div className="bg-gray-800 border border-gray-700 p-4 sm:p-6 rounded-xl hover:shadow-xl transition-all md:col-span-2 xl:col-span-1">
+            <div className="flex items-center mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-950 rounded-xl flex items-center justify-center mr-3 sm:mr-4 font-bold text-xs sm:text-sm text-orange-400 flex-shrink-0">
+                HR
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg sm:text-xl font-semibold truncate text-gray-100">
+                  {hackerrankData.username}
+                </h3>
+                <p className="text-gray-400 text-xs sm:text-sm">Coding Platform</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-xs sm:text-sm">Challenges</span>
+                <span className="text-xl sm:text-2xl font-bold text-gray-100">
+                  {hackerrankData.challengesSolved?.toLocaleString() || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-xs sm:text-sm">Badges</span>
+                <span className="text-xl sm:text-2xl font-bold text-orange-400">
+                  {hackerrankData.totalBadges || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-xs sm:text-sm">Stars</span>
+                <span className="text-xl sm:text-2xl font-bold text-gray-100">
+                  {hackerrankData.totalStars?.toLocaleString() || 0}
+                </span>
+              </div>
+            </div>
+
+            {hackerrankData.badges?.length > 0 && (
+              <div className="pt-3 sm:pt-4 border-t border-gray-700">
+                <h4 className="font-semibold text-xs sm:text-sm mb-2 sm:mb-3 text-gray-300">
+                  Top Badges
+                </h4>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  {hackerrankData.badges.slice(0, 6).map((badge, idx) => (
+                    <span 
+                      key={idx} 
+                      className="px-2 py-1 bg-gray-700 text-xs rounded-full border border-gray-600 truncate max-w-[80px] sm:max-w-[100px] text-gray-200"
+                      title={badge}
+                    >
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
     </div>
   );
 };
-
 export default StatsDisplay;

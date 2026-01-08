@@ -1,3 +1,5 @@
+exports.openZip = openZip;
+
 var fs = require("fs");
 
 var promises = require("./promises");
