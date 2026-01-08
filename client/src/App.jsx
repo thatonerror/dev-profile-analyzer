@@ -44,10 +44,8 @@ function App() {
       </header>
 
       <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-[90vw]">
-        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-          {/* Left Column - Inputs */}
-          <div className="space-y-6 sm:space-y-8">
-            <ProfileConnect 
+<div className="grid grid-cols-1 lg:grid-cols-[35%_65%] xl:grid-cols-[30%_70%] gap-6 sm:gap-8 lg:gap-12">          {/* Left Column - Inputs */}
+<div className="space-y-6 sm:space-y-8 min-w-0">            <ProfileConnect 
               setGithubData={setGithubData}
               setLeetcodeData={setLeetcodeData}
               setHackerrankData={setHackerrankData}

@@ -38,7 +38,7 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
       const formData = new FormData();
       formData.append('resume', file);
       
-      const uploadResponse = await fetch('http://localhost:5000/api/upload', {
+const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -56,7 +56,7 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
       console.log('🤖 Starting AI analysis...');
       
       try {
-        const analysisResponse = await fetch('http://localhost:5000/api/analyze', {
+const analysisResponse = await fetch(`${import.meta.env.VITE_API_URL}/analyze`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
