@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Upload, FileText, Loader2, Sparkles } from 'lucide-react';
 import { uploadResume, analyzeProfile } from '../services/api';
 
+// CVUploader Component  
+// CVUploader Component  
 const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, setAiAnalysis }) => {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -10,18 +12,13 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
+    setDragActive(e.type === 'dragenter' || e.type === 'dragover');
   };
 
   const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
     const file = e.dataTransfer.files[0];
     if (file && (file.type === 'application/pdf' || file.name.endsWith('.docx'))) {
       await handleFileUpload(file);
@@ -37,25 +34,40 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
     try {
       console.log('📤 Starting upload for:', file.name);
       
-      // Upload resume using the imported function
-      const uploadResult = await uploadResume(file);
+      // Upload resume
+      const formData = new FormData();
+      formData.append('resume', file);
+      
+      const uploadResponse = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!uploadResponse.ok) throw new Error('Upload failed');
+      
+      const uploadResult = await uploadResponse.json();
       console.log('✅ Upload result:', uploadResult);
       
       setResumeData(uploadResult.parsedData);
       setUploadProgress(70);
 
-      // Always trigger AI analysis (works with or without profile data)
+      // Trigger AI analysis
       setUploadProgress(90);
       console.log('🤖 Starting AI analysis...');
       
       try {
-        const analysis = await analyzeProfile(
-          uploadResult.parsedData,
-          githubData,
-          leetcodeData,
-          hackerrankData
-        );
+        const analysisResponse = await fetch('http://localhost:5000/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            resumeData: uploadResult.parsedData,
+            githubData,
+            leetcodeData,
+            hackerrankData
+          })
+        });
         
+        const analysis = await analysisResponse.json();
         console.log('✅ Analysis complete:', analysis);
         setAiAnalysis(analysis);
       } catch (analysisError) {
@@ -83,17 +95,19 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border border-white/20">
+    <div className="bg-gradient-to-br from-blue-900/30 to-gray-900/30 backdrop-blur-xl border border-purple-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl">
       <div className="flex items-center justify-center gap-3 mb-6">
-        <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-blue-400" />
-        <h2 className="text-xl sm:text-2xl font-bold text-center">Upload Resume</h2>
+        <Sparkles className="w-7 h-7 text-purple-400" />
+        <h2 className="text-2xl sm:text-3xl font-bold text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          Upload Resume
+        </h2>
       </div>
       
       <div
-        className={`relative border-4 border-dashed rounded-2xl p-8 sm:p-12 text-center transition-all duration-300 group cursor-pointer ${
+        className={`relative border-3 border-dashed rounded-3xl p-10 sm:p-16 text-center transition-all duration-300 cursor-pointer ${
           dragActive
-            ? 'border-blue-400 bg-blue-500/20 scale-105 shadow-2xl'
-            : 'border-white/30 hover:border-white/50 hover:bg-white/5'
+            ? 'border-purple-400 bg-purple-500/20 scale-105 shadow-2xl'
+            : 'border-purple-500/30 hover:border-purple-400/50 hover:bg-purple-500/10'
         } ${uploading ? 'opacity-75 cursor-not-allowed' : ''}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -103,47 +117,47 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
         <input
           type="file"
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-          accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          accept=".pdf,.docx"
           onChange={(e) => handleFileUpload(e.target.files[0])}
           disabled={uploading}
         />
         
         {uploading ? (
-          <div className="space-y-4">
-            <Loader2 className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-blue-500 animate-spin" />
-            <div className="space-y-2">
-              <p className="text-base sm:text-lg font-semibold">Analyzing your profile...</p>
-              <div className="w-full bg-white/20 rounded-full h-2.5 sm:h-3 overflow-hidden">
+          <div className="space-y-6">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto">
+              <svg className="animate-spin w-full h-full text-purple-500" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+            </div>
+            <div className="space-y-3">
+              <p className="text-lg sm:text-xl font-bold text-purple-200">Analyzing Profile...</p>
+              <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
                 <div 
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-full rounded-full transition-all duration-300 shadow-lg"
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>
-              <p className="text-xs sm:text-sm text-gray-300">{uploadProgress}%</p>
+              <p className="text-sm text-purple-300">{uploadProgress}%</p>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-              <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+          <div className="space-y-6">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-blue-500 to-indigo-500 rounded-3xl flex items-center justify-center shadow-2xl transform hover:scale-110 transition-transform">
+              <svg className="w-10 h-10 sm:w-12 sm:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
             </div>
             <div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-2">Drop your PDF/DOCX</h3>
-              <p className="text-gray-300 text-base sm:text-lg">or click to browse files</p>
+              <h3 className="text-2xl sm:text-3xl font-bold mb-3 text-purple-100">Drop your resume</h3>
+              <p className="text-purple-300 text-base sm:text-lg">PDF or DOCX • Click to browse</p>
             </div>
-            <p className="text-xs sm:text-sm text-gray-400">Max 5MB • AI analysis included</p>
+            <p className="text-sm text-purple-400">Max 5MB • AI-powered analysis included</p>
           </div>
         )}
       </div>
 
       {!uploading && (
-        <div className="mt-6 p-3 sm:p-4 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-500/30 rounded-xl">
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300 flex-shrink-0" />
-            <p className="font-semibold text-sm sm:text-base text-emerald-200">
-              AI will analyze your resume + profiles automatically!
-            </p>
-          </div>
+        <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-2xl">
+          <p className="text-center font-semibold text-purple-200 flex items-center justify-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            AI analyzes your resume + profiles automatically
+          </p>
         </div>
       )}
     </div>

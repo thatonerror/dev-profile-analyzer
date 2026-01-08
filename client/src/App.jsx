@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { CheckCircle } from 'lucide-react'; // ADD THIS IMPORT
+import { CheckCircle, Sparkles, TrendingUp } from 'lucide-react';
+// import { CheckCircle } from 'lucide-react'; // ADD THIS IMPORT
 import ProfileConnect from './components/ProfileConnect';
 import StatsDisplay from './components/StatsDisplay';
 import CVUploader from './components/CVUploader';
+import { Github, Code2, Award, Loader2 } from 'lucide-react';
+// import { fetchGithubStats, fetchLeetcodeStats, fetchHackerrankStats } from '../services/api';
 import AIAnalysis from './components/AiAnalysis';
-
 function App() {
   const [githubData, setGithubData] = useState(null);
   const [leetcodeData, setLeetcodeData] = useState(null);
@@ -13,25 +15,38 @@ function App() {
   const [aiAnalysis, setAiAnalysis] = useState(null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-950 to-slate-900 text-white">
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-700"></div>
+        <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
       {/* Header */}
-      <header className="border-b border-gray-800">
-        <div className="container mx-auto px-6 py-8 max-w-7xl">
-          <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent mb-6">
+      <header className="relative border-b border-white/10 backdrop-blur-xl bg-white/5">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 max-w-7xl">
+          <div className="text-center space-y-4 sm:space-y-6">
+            <div className="flex justify-center mb-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 blur-2xl opacity-50 animate-pulse"></div>
+                <Sparkles className="relative w-12 h-12 sm:w-16 sm:h-16 text-blue-400" />
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black bg-gradient-to-r from-blue-400 via-indigo-900 to-black-400 bg-clip-text text-transparent leading-tight">
               Developer Profile Analyzer
             </h1>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              Professional evaluation of GitHub, LeetCode, HackerRank profiles + AI-powered resume analysis
+            <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">
+              AI-powered professional evaluation combining GitHub, LeetCode, HackerRank & Resume Analysis
             </p>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-16 max-w-7xl">
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-7xl">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
           {/* Left Column - Inputs */}
-          <div className="lg:sticky lg:top-8 lg:h-screen lg:overflow-y-auto space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <ProfileConnect 
               setGithubData={setGithubData}
               setLeetcodeData={setLeetcodeData}
@@ -47,7 +62,15 @@ function App() {
           </div>
 
           {/* Right Column - Results */}
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
+            {!githubData && !leetcodeData && !hackerrankData && !resumeData && (
+              <div className="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 backdrop-blur-xl border border-indigo-500/30 rounded-3xl p-8 sm:p-12 text-center">
+                <TrendingUp className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6 text-indigo-400 opacity-50" />
+                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-slate-200">Ready to Analyze</h3>
+                <p className="text-slate-400 text-sm sm:text-base">Connect your profiles and upload your resume to see detailed analytics here</p>
+              </div>
+            )}
+
             <StatsDisplay 
               githubData={githubData}
               leetcodeData={leetcodeData}
@@ -55,15 +78,24 @@ function App() {
             />
             
             {resumeData && !aiAnalysis && (
-              <div className="bg-gray-800/50 border border-gray-700/50 p-8 rounded-2xl">
-                <h3 className="text-2xl font-semibold mb-6 flex items-center">
-                  <CheckCircle className="w-8 h-8 mr-3 text-green-400" />
-                  Resume Parsed Successfully
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
-                  <div><span className="font-semibold">Name:</span> {resumeData.name}</div>
-                  <div><span className="font-semibold">Email:</span> {resumeData.email}</div>
-                  <div className="md:col-span-2"><span className="font-semibold">Skills:</span> {resumeData.skills}</div>
+              <div className="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-6 sm:p-8 animate-fade-in">
+                <div className="flex items-center gap-3 mb-6">
+                  <CheckCircle className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400 flex-shrink-0" />
+                  <h3 className="text-xl sm:text-2xl font-bold text-emerald-100">Resume Parsed</h3>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4 text-sm sm:text-base">
+                  <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                    <span className="font-semibold text-emerald-300 block mb-1">Name</span>
+                    <span className="text-slate-200">{resumeData.name}</span>
+                  </div>
+                  <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                    <span className="font-semibold text-emerald-300 block mb-1">Email</span>
+                    <span className="text-slate-200 break-all">{resumeData.email}</span>
+                  </div>
+                  <div className="sm:col-span-2 bg-white/5 p-4 rounded-xl border border-white/10">
+                    <span className="font-semibold text-emerald-300 block mb-2">Skills</span>
+                    <span className="text-slate-200">{resumeData.skills}</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -72,8 +104,16 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="relative border-t border-white/10 mt-12 sm:mt-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl text-center text-slate-400 text-sm">
+          <p>Powered by AI • Built for Developers</p>
+        </div>
+      </footer>
     </div>
   );
 }
+
 
 export default App;

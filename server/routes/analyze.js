@@ -4,55 +4,109 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   try {
     const { resumeData, githubData, leetcodeData, hackerrankData } = req.body;
-    
-    console.log('🤖 AI Analysis started');
-    console.log('📄 Resume:', resumeData?.name);
-    console.log('💻 GitHub:', githubData?.username || 'Not provided');
-    console.log('🧩 LeetCode:', leetcodeData?.username || 'Not provided');
-    console.log('🏆 HackerRank:', hackerrankData?.username || 'Not provided');
-    
-    // Build analysis based on available data
-    const hasProfiles = githubData || leetcodeData || hackerrankData;
-    
+
+    // ---------- SCORE CALCULATION ----------
+    let resumeScore = 0;
+    let githubScore = 0;
+    let leetcodeScore = 0;
+    let hackerrankScore = 0;
+
+    // Resume scoring
+    if (resumeData?.skills && resumeData.skills.length > 0) resumeScore += 40;
+    if (resumeData?.experience && !resumeData.experience.includes('not')) resumeScore += 30;
+    if (resumeData?.education && !resumeData.education.includes('not')) resumeScore += 30;
+
+    // GitHub scoring
+    if (githubData) {
+      githubScore += Math.min(githubData.publicRepos * 5, 40);
+      githubScore += Math.min(githubData.totalStars * 2, 40);
+      githubScore += Math.min(githubData.followers * 2, 20);
+    }
+
+    // LeetCode scoring
+    if (leetcodeData) {
+      leetcodeScore += Math.min(leetcodeData.totalSolved, 100);
+    }
+
+    // HackerRank scoring
+    if (hackerrankData) {
+      hackerrankScore += Math.min(hackerrankData.totalBadges * 10, 100);
+    }
+
+    resumeScore = Math.min(resumeScore, 100);
+    githubScore = Math.min(githubScore, 100);
+    leetcodeScore = Math.min(leetcodeScore, 100);
+    hackerrankScore = Math.min(hackerrankScore, 100);
+
+    const overallScore = Math.round(
+      (resumeScore + githubScore + leetcodeScore + hackerrankScore) / 4
+    );
+
+    // ---------- RESPONSE ----------
     const analysis = {
-      summary: hasProfiles 
-        ? `${resumeData?.name || 'Candidate'} is a skilled developer with experience in ${resumeData?.skills || 'various technologies'}. ${githubData ? `Active on GitHub with ${githubData.publicRepos} repositories and ${githubData.totalStars} stars.` : ''} ${leetcodeData ? `Solved ${leetcodeData.totalSolved} LeetCode problems.` : ''} ${hackerrankData ? `Earned ${hackerrankData.totalBadges} badges on HackerRank.` : ''}`
-        : `${resumeData?.name || 'Candidate'} has strong technical skills including ${resumeData?.skills || 'various technologies'}. Consider adding GitHub, LeetCode, and HackerRank profiles for a more comprehensive analysis.`,
-      
+      overallScore,
+
+      scoreBreakdown: {
+        resume: resumeScore,
+        github: githubScore,
+        leetcode: leetcodeScore,
+        hackerrank: hackerrankScore
+      },
+
+      profileStrength: {
+        resume: {
+          score: resumeScore,
+          status: resumeScore >= 70 ? 'Strong' : resumeScore >= 40 ? 'Moderate' : 'Weak',
+          details: 'Based on skills, education, and experience'
+        },
+        github: githubData && {
+          score: githubScore,
+          status: githubScore >= 70 ? 'Strong' : githubScore >= 40 ? 'Moderate' : 'Weak',
+          details: `${githubData.publicRepos} repos, ${githubData.totalStars} stars`
+        },
+        leetcode: leetcodeData && {
+          score: leetcodeScore,
+          status: leetcodeScore >= 70 ? 'Strong' : leetcodeScore >= 40 ? 'Moderate' : 'Weak',
+          details: `${leetcodeData.totalSolved} problems solved`
+        },
+        hackerrank: hackerrankData && {
+          score: hackerrankScore,
+          status: hackerrankScore >= 70 ? 'Strong' : hackerrankScore >= 40 ? 'Moderate' : 'Weak',
+          details: `${hackerrankData.totalBadges || 0} badges earned`
+        }
+      },
+
+      summary: `${resumeData?.name || 'Candidate'} has a solid foundation in ${
+        resumeData?.skills || 'software development'
+      }. The overall profile shows ${
+        overallScore >= 70 ? 'strong' : overallScore >= 40 ? 'moderate' : 'early-stage'
+      } readiness for technical roles.`,
+
       technicalStrengths: [
-        resumeData?.skills && `Skilled in: ${resumeData.skills}`,
-        githubData && `Strong GitHub presence with ${githubData.publicRepos} public repositories`,
-        githubData && githubData.totalStars > 0 && `${githubData.totalStars} total stars across repositories`,
-        leetcodeData && `Solved ${leetcodeData.totalSolved} coding problems on LeetCode`,
-        leetcodeData && leetcodeData.hardSolved > 0 && `Completed ${leetcodeData.hardSolved} hard-level problems`,
-        hackerrankData && `Earned ${hackerrankData.totalBadges} HackerRank badges`,
-        githubData?.topLanguages?.length > 0 && `Top programming languages: ${githubData.topLanguages.slice(0, 3).map(l => l.language).join(', ')}`
+        resumeData?.skills && `Core skills: ${resumeData.skills}`,
+        githubData && `GitHub projects: ${githubData.publicRepos}`,
+        leetcodeData && `LeetCode solved: ${leetcodeData.totalSolved}`,
+        hackerrankData && `HackerRank badges: ${hackerrankData.totalBadges}`
       ].filter(Boolean),
-      
-      improvementTips: [
-        !githubData && 'Create a GitHub profile to showcase your projects and contributions',
-        githubData && githubData.publicRepos < 5 && 'Build more public projects to demonstrate your skills to potential employers',
-        githubData && githubData.totalStars < 10 && 'Create projects that solve real problems to attract more stars',
-        !leetcodeData && 'Start solving problems on LeetCode to improve algorithmic thinking',
-        leetcodeData && leetcodeData.totalSolved < 50 && 'Aim to solve at least 100 problems across all difficulty levels',
-        leetcodeData && leetcodeData.hardSolved < 10 && 'Challenge yourself with more hard-level problems',
-        !hackerrankData && 'Join HackerRank to participate in coding challenges and earn certifications',
-        hackerrankData && hackerrankData.totalBadges < 5 && 'Participate in more challenges to earn additional badges',
-        'Keep your resume updated with latest projects and achievements',
-        'Contribute to open-source projects to gain real-world experience',
-        'Build a portfolio website to showcase your work professionally'
-      ].filter(Boolean).slice(0, 6)
+
+      improvementAreas: [
+        githubScore < 50 && { area: 'GitHub', priority: 'High', tip: 'Build and deploy more real-world projects' },
+        leetcodeScore < 50 && { area: 'DSA', priority: 'Medium', tip: 'Solve more medium and hard problems' },
+        resumeScore < 70 && { area: 'Resume', priority: 'Medium', tip: 'Add quantified impact and metrics' }
+      ].filter(Boolean),
+
+      careerRecommendations: [
+        'Apply for frontend / full-stack developer roles',
+        'Build 2–3 production-grade projects',
+        'Contribute to open source'
+      ]
     };
-    
-    console.log('✅ Analysis generated successfully');
+
     res.json(analysis);
-    
+
   } catch (error) {
     console.error('❌ Analysis error:', error);
-    res.status(500).json({ 
-      error: 'Analysis failed',
-      details: error.message 
-    });
+    res.status(500).json({ error: 'Analysis failed', details: error.message });
   }
 });
 
