@@ -1,79 +1,64 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  timeout: 30000,
 });
-
-const fetchWithRetry = async (fn, maxRetries = 3) => {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      console.warn(`Attempt ${i + 1} failed, retrying...`);
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-    }
-  }
-};
 
 // GitHub API
 export const fetchGithubStats = async (username) => {
-  return fetchWithRetry(() => 
-    apiClient.get(`/github/${username}`).then(res => res.data)
-  );
+  const response = await apiClient.get(`/github/${username}`);
+  return response.data;
 };
 
 // LeetCode API
 export const fetchLeetcodeStats = async (username) => {
-  return fetchWithRetry(() => 
-    apiClient.get(`/leetcode/${username}`).then(res => res.data)
-  );
+  const response = await apiClient.get(`/leetcode/${username}`);
+  return response.data;
 };
 
-// HackerRank API - Fixed
+// HackerRank API
 export const fetchHackerrankStats = async (username) => {
-  return fetchWithRetry(() => 
-    apiClient.get(`/hackerrank/${username}`).then(res => res.data)
-  );
+  const response = await apiClient.get(`/hackerrank/${username}`);
+  return response.data;
 };
 
-// Resume Upload - Fixed
+// Resume Upload - FIXED
 export const uploadResume = async (file) => {
   const formData = new FormData();
-  formData.append('resume', file); // Match backend field name
+  formData.append('resume', file); // Must match multer field name
   
-  console.log('📤 Uploading file:', file.name, file.size, 'bytes');
+  console.log('📤 Uploading:', file.name, file.type, file.size);
   
-  return apiClient.post('/upload', formData, {
-    headers: { 
-      'Content-Type': 'multipart/form-data'
-    },
-    timeout: 30000, // 30 seconds for large files
-    onUploadProgress: (progressEvent) => {
-      const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-      console.log('Upload progress:', percentCompleted + '%');
-    }
-  }).then(res => {
-    console.log('✅ Upload response:', res.data);
-    return res.data;
-  }).catch(err => {
-    console.error('❌ Upload error:', err.response?.data || err.message);
-    throw err;
-  });
+  try {
+    const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
+      headers: { 
+        'Content-Type': 'multipart/form-data'
+      },
+      timeout: 30000,
+      onUploadProgress: (progressEvent) => {
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        console.log('📊 Upload progress:', percent + '%');
+      }
+    });
+    
+    console.log('✅ Upload success:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Upload failed:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 // AI Analysis
 export const analyzeProfile = async (resumeData, githubData, leetcodeData, hackerrankData) => {
-  return apiClient.post('/analyze', { 
+  const response = await apiClient.post('/analyze', { 
     resumeData, 
     githubData, 
     leetcodeData,
     hackerrankData
-  }).then(res => res.data);
+  });
+  return response.data;
 };

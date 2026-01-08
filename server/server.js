@@ -4,14 +4,19 @@ const dotenv = require('dotenv');
 const multer = require('multer');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
-const fs = require('fs'); // 👈 ONLY ONCE!
+const fs = require('fs');
 
 dotenv.config();
-
+const { parseResume } = require('./utils/parser');
+console.log('🧪 Testing parseResume import:', typeof parseResume);
+if (typeof parseResume !== 'function') {
+  console.error('❌ CRITICAL: parseResume is not imported correctly!');
+  process.exit(1);
+}
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ FIXED: Create uploads folder (absolute path)
+// ✅ Create uploads folder FIRST
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -20,7 +25,8 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000']
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -33,34 +39,33 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// ✅ FIXED MULTER - ABSOLUTE PATH
+// ✅ Multer configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadsDir); // 👈 ABSOLUTE PATH!
+    console.log('📂 Saving to:', uploadsDir);
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
+    const uniqueName = Date.now() + '-' + file.originalname;
+    console.log('💾 Filename:', uniqueName);
+    cb(null, uniqueName);
   }
 });
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (req, file, cb) => {
-    if (file.originalname.match(/\.(pdf|docx)$/i)) {
+    console.log('🔍 Checking file:', file.originalname, file.mimetype);
+    if (file.mimetype === 'application/pdf' || 
+        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        file.originalname.match(/\.(pdf|docx)$/i)) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF/DOCX'), false);
+      cb(new Error('Only PDF and DOCX files are allowed'), false);
     }
   }
 });
-
-// API Routes - BEFORE 404 handler!
-app.use('/api/github', require('./routes/github'));
-app.use('/api/leetcode', require('./routes/leetcode'));
-app.use('/api/hackerrank', require('./routes/hackerrank'));
-app.use('/api/upload', upload.single('resume'), require('./routes/upload'));
-app.use('/api/analyze', require('./routes/analyze'));
 
 // Health check
 app.get('/', (req, res) => {
@@ -76,17 +81,30 @@ app.get('/', (req, res) => {
   });
 });
 
-// ✅ FIXED 404 - AFTER routes only
+// API Routes
+app.use('/api/github', require('./routes/github'));
+app.use('/api/leetcode', require('./routes/leetcode'));
+app.use('/api/hackerrank', require('./routes/hackerrank'));
+
+// ✅ IMPORTANT: Upload route with multer middleware HERE
+app.use('/api/upload', upload.single('resume'), require('./routes/upload'));
+
+app.use('/api/analyze', require('./routes/analyze'));
+
+// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.originalUrl });
 });
 
-// Global Error Handler - LAST
+// Global Error Handler
 app.use((error, req, res, next) => {
   console.error('🚨 ERROR:', error.message);
   
-  if (error.code === 'LIMIT_FILE_SIZE') {
-    return res.status(400).json({ error: 'File too large (5MB max)' });
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large (5MB max)' });
+    }
+    return res.status(400).json({ error: error.message });
   }
   
   res.status(500).json({ error: error.message });
@@ -97,6 +115,9 @@ const server = app.listen(PORT, () => {
   console.log('='.repeat(60));
   console.log(`🚀 Server: http://localhost:${PORT}`);
   console.log(`📱 Client: http://localhost:5173`);
+  console.log(`📁 Uploads: ${uploadsDir}`);
   console.log('✅ All APIs ready (GitHub/LeetCode/HR/CV)');
   console.log('='.repeat(60));
 });
+
+module.exports = app;

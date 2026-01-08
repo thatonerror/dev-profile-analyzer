@@ -4,64 +4,79 @@ const fs = require('fs');
 const path = require('path');
 
 async function parseResume(filePath) {
-  console.log('🔍 Parsing file:', filePath);
+  console.log('🔍 parseResume called with:', filePath);
   
-  // Verify file exists
   if (!fs.existsSync(filePath)) {
-    throw new Error('File not found: ' + filePath);
+    throw new Error('File not found at path: ' + filePath);
   }
+  
+  const fileStats = fs.statSync(filePath);
+  console.log('📊 File stats:', { size: fileStats.size, exists: true });
   
   let text = '';
   const ext = path.extname(filePath).toLowerCase();
+  console.log('📝 File extension:', ext);
   
   try {
-    // Read file buffer
     const dataBuffer = fs.readFileSync(filePath);
-    console.log('📦 File size:', dataBuffer.length, 'bytes');
+    console.log('📦 Buffer loaded, size:', dataBuffer.length, 'bytes');
     
     if (ext === '.pdf') {
-      console.log('📄 Processing PDF...');
+      console.log('📄 Processing as PDF...');
       const data = await pdfParse(dataBuffer);
       text = data.text;
-      console.log('✅ PDF text extracted:', text.length, 'chars');
+      console.log('✅ PDF parsed, text length:', text.length);
     } else if (ext === '.docx') {
-      console.log('📝 Processing DOCX...');
+      console.log('📝 Processing as DOCX...');
       const result = await mammoth.extractRawText({ buffer: dataBuffer });
       text = result.value;
-      console.log('✅ DOCX text extracted:', text.length, 'chars');
+      console.log('✅ DOCX parsed, text length:', text.length);
     } else {
       throw new Error('Unsupported file type: ' + ext);
     }
 
-    // Validate text extraction
     if (!text || text.trim().length < 10) {
-      console.warn('⚠️ Very short text extracted, file might be corrupted or empty');
+      console.warn('⚠️ Very short text extracted');
+      text = 'Unable to extract sufficient text from file';
     }
 
-    // Clean text
+    // Keep original text for better name extraction
+    const originalText = text;
     text = text.replace(/\s+/g, ' ').trim();
     const fullText = text.substring(0, 5000);
-    console.log('✅ Final text length:', fullText.length);
 
-    // Extract structured data with better patterns
+    // Extract structured data
     const emailMatch = text.match(/[\w\.\-]+@[\w\.\-]+\.\w{2,}/i);
     const phoneMatch = text.match(/(?:\+?91[-\s]?)?[6-9]\d{9}|\(\d{3}\)\s?\d{3}-\d{4}|\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/);
     
-    // Better name extraction
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-    let nameMatch = null;
+    // IMPROVED NAME EXTRACTION
+    let nameMatch = 'Name not found';
     
-    // Try first few lines for name
-    for (let i = 0; i < Math.min(5, lines.length); i++) {
-      const line = lines[i];
-      if (line.length > 3 && line.length < 50 && /^[A-Z][a-zA-Z\s]+$/.test(line)) {
-        nameMatch = line;
-        break;
+    // Method 1: Try to find name at the very beginning (first line)
+    const firstLine = originalText.split('\n')[0].trim();
+    if (firstLine.length > 2 && firstLine.length < 50 && /^[A-Z\s]+$/.test(firstLine)) {
+      nameMatch = firstLine;
+      console.log('✅ Name extracted (Method 1 - First Line):', nameMatch);
+    } else {
+      // Method 2: Look for patterns like "NAME: John Doe" or just capitalized words
+      const namePatterns = [
+        /(?:name|NAME)[:;\s-]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)+)/,
+        /^([A-Z][A-Z\s]{2,40})$/m,
+        /^([A-Z][a-z]+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*$/m
+      ];
+      
+      for (const pattern of namePatterns) {
+        const match = originalText.match(pattern);
+        if (match) {
+          nameMatch = match[1].trim();
+          console.log('✅ Name extracted (Method 2 - Pattern Match):', nameMatch);
+          break;
+        }
       }
     }
 
     const parsedData = {
-      name: nameMatch || 'Name not found',
+      name: nameMatch,
       email: emailMatch ? emailMatch[0] : 'Email not found',
       phone: phoneMatch ? phoneMatch[0] : 'Phone not found',
       skills: extractSkills(text),
@@ -69,22 +84,21 @@ async function parseResume(filePath) {
       success: true
     };
 
-    console.log('✅ Parsed data:', parsedData);
+    console.log('✅ Final parsed data:', parsedData);
     
     return parsedData;
     
   } catch (error) {
-    console.error('❌ Parse error:', error.message);
-    throw new Error(`Parse failed: ${error.message}`);
+    console.error('❌ Parse error:', error);
+    throw new Error(`Failed to parse file: ${error.message}`);
   } finally {
-    // Cleanup - delete file after processing
     try {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        console.log('🗑️ Cleaned up file:', filePath);
+        console.log('🗑️ File deleted:', filePath);
       }
     } catch (cleanupError) {
-      console.error('⚠️ Cleanup error:', cleanupError.message);
+      console.error('⚠️ Cleanup failed:', cleanupError.message);
     }
   }
 }
@@ -110,4 +124,5 @@ function extractSkills(text) {
   return foundSkills.length > 0 ? foundSkills.join(', ') : 'Skills not found';
 }
 
+// ✅ CORRECT EXPORT - Use module.exports for Node.js
 module.exports = { parseResume };

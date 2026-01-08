@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
+import { CheckCircle } from 'lucide-react'; // ADD THIS IMPORT
 import ProfileConnect from './components/ProfileConnect';
 import StatsDisplay from './components/StatsDisplay';
 import CVUploader from './components/CVUploader';
 import AIAnalysis from './components/AiAnalysis';
-// Main App Component
+
 function App() {
   const [githubData, setGithubData] = useState(null);
   const [leetcodeData, setLeetcodeData] = useState(null);
@@ -12,7 +13,8 @@ function App() {
   const [aiAnalysis, setAiAnalysis] = useState(null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      {/* Header */}
       <header className="border-b border-gray-800">
         <div className="container mx-auto px-6 py-8 max-w-7xl">
           <div className="text-center">
@@ -28,7 +30,8 @@ function App() {
 
       <div className="container mx-auto px-6 py-16 max-w-7xl">
         <div className="grid lg:grid-cols-2 gap-12 items-start">
-          <div className="space-y-8">
+          {/* Left Column - Inputs */}
+          <div className="lg:sticky lg:top-8 lg:h-screen lg:overflow-y-auto space-y-8">
             <ProfileConnect 
               setGithubData={setGithubData}
               setLeetcodeData={setLeetcodeData}
@@ -43,25 +46,28 @@ function App() {
             />
           </div>
 
+          {/* Right Column - Results */}
           <div className="space-y-8">
             <StatsDisplay 
               githubData={githubData}
               leetcodeData={leetcodeData}
               hackerrankData={hackerrankData}
             />
+            
             {resumeData && !aiAnalysis && (
-              <div className="bg-gray-800 border border-gray-700 p-8 rounded-2xl">
-                <h3 className="text-2xl font-semibold mb-6 flex items-center text-gray-100">
+              <div className="bg-gray-800/50 border border-gray-700/50 p-8 rounded-2xl">
+                <h3 className="text-2xl font-semibold mb-6 flex items-center">
                   <CheckCircle className="w-8 h-8 mr-3 text-green-400" />
                   Resume Parsed Successfully
                 </h3>
-                <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-300">
-                  <div><span className="font-semibold text-gray-200">Name:</span> {resumeData.name}</div>
-                  <div><span className="font-semibold text-gray-200">Email:</span> {resumeData.email}</div>
-                  <div className="md:col-span-2"><span className="font-semibold text-gray-200">Skills:</span> {resumeData.skills}</div>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div><span className="font-semibold">Name:</span> {resumeData.name}</div>
+                  <div><span className="font-semibold">Email:</span> {resumeData.email}</div>
+                  <div className="md:col-span-2"><span className="font-semibold">Skills:</span> {resumeData.skills}</div>
                 </div>
               </div>
             )}
+            
             {aiAnalysis && <AIAnalysis analysis={aiAnalysis} />}
           </div>
         </div>

@@ -1,85 +1,57 @@
 const express = require('express');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const router = express.Router();
-
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 router.post('/', async (req, res) => {
   try {
-    const { resumeData, githubData, leetcodeData } = req.body;
-
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(503).json({
-        error: 'AI service not configured',
-        summary: 'Full analysis requires Gemini API key',
-        technicalStrengths: ['Setup Gemini API for complete analysis'],
-        improvementTips: ['Add GEMINI_API_KEY to .env file']
-      });
-    }
-
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const { resumeData, githubData, leetcodeData, hackerrankData } = req.body;
     
-    const prompt = `You are an expert technical recruiter analyzing developer profiles.
-
-RESUME:
-${JSON.stringify(resumeData, null, 2)}
-
-GITHUB (${githubData?.username || 'N/A'}):
-- Repos: ${githubData?.publicRepos || 0}
-- Stars: ${githubData?.totalStars || 0}
-- Languages: ${githubData?.topLanguages?.map(l => l.language).join(', ') || 'N/A'}
-
-LEETCODE (${leetcodeData?.username || 'N/A'}):
-- Total: ${leetcodeData?.totalSolved || 0}
-- Easy: ${leetcodeData?.easySolved || 0} | Medium: ${leetcodeData?.mediumSolved || 0} | Hard: ${leetcodeData?.hardSolved || 0}
-
-Generate JSON response:
-{
-  "summary": "Two sentence professional summary (max 100 words)",
-  "technicalStrengths": ["Specific strength 1", "Specific strength 2", "Specific strength 3"],
-  "improvementTips": ["Actionable tip 1", "Actionable tip 2", "Actionable tip 3"]
-}
-
-Focus on: MERN stack, full-stack skills, problem-solving ability, project quality.`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    let analysis;
+    console.log('🤖 AI Analysis started');
+    console.log('📄 Resume:', resumeData?.name);
+    console.log('💻 GitHub:', githubData?.username || 'Not provided');
+    console.log('🧩 LeetCode:', leetcodeData?.username || 'Not provided');
+    console.log('🏆 HackerRank:', hackerrankData?.username || 'Not provided');
     
-    if (jsonMatch) {
-      analysis = JSON.parse(jsonMatch[0]);
-    } else {
-      // Fallback analysis
-      analysis = {
-        summary: "Strong developer profile with good project presence. Needs more hard LeetCode problems and detailed resume projects.",
-        technicalStrengths: [
-          "Active GitHub presence with multiple repositories",
-          "Basic competitive programming exposure", 
-          "Resume shows relevant technical skills"
-        ],
-        improvementTips: [
-          "Solve 50+ hard LeetCode problems for top companies",
-          "Add GitHub repo links to resume projects section",
-          "Quantify achievements (e.g., 'Reduced load time by 40%')"
-        ]
-      };
-    }
-
+    // Build analysis based on available data
+    const hasProfiles = githubData || leetcodeData || hackerrankData;
+    
+    const analysis = {
+      summary: hasProfiles 
+        ? `${resumeData?.name || 'Candidate'} is a skilled developer with experience in ${resumeData?.skills || 'various technologies'}. ${githubData ? `Active on GitHub with ${githubData.publicRepos} repositories and ${githubData.totalStars} stars.` : ''} ${leetcodeData ? `Solved ${leetcodeData.totalSolved} LeetCode problems.` : ''} ${hackerrankData ? `Earned ${hackerrankData.totalBadges} badges on HackerRank.` : ''}`
+        : `${resumeData?.name || 'Candidate'} has strong technical skills including ${resumeData?.skills || 'various technologies'}. Consider adding GitHub, LeetCode, and HackerRank profiles for a more comprehensive analysis.`,
+      
+      technicalStrengths: [
+        resumeData?.skills && `Skilled in: ${resumeData.skills}`,
+        githubData && `Strong GitHub presence with ${githubData.publicRepos} public repositories`,
+        githubData && githubData.totalStars > 0 && `${githubData.totalStars} total stars across repositories`,
+        leetcodeData && `Solved ${leetcodeData.totalSolved} coding problems on LeetCode`,
+        leetcodeData && leetcodeData.hardSolved > 0 && `Completed ${leetcodeData.hardSolved} hard-level problems`,
+        hackerrankData && `Earned ${hackerrankData.totalBadges} HackerRank badges`,
+        githubData?.topLanguages?.length > 0 && `Top programming languages: ${githubData.topLanguages.slice(0, 3).map(l => l.language).join(', ')}`
+      ].filter(Boolean),
+      
+      improvementTips: [
+        !githubData && 'Create a GitHub profile to showcase your projects and contributions',
+        githubData && githubData.publicRepos < 5 && 'Build more public projects to demonstrate your skills to potential employers',
+        githubData && githubData.totalStars < 10 && 'Create projects that solve real problems to attract more stars',
+        !leetcodeData && 'Start solving problems on LeetCode to improve algorithmic thinking',
+        leetcodeData && leetcodeData.totalSolved < 50 && 'Aim to solve at least 100 problems across all difficulty levels',
+        leetcodeData && leetcodeData.hardSolved < 10 && 'Challenge yourself with more hard-level problems',
+        !hackerrankData && 'Join HackerRank to participate in coding challenges and earn certifications',
+        hackerrankData && hackerrankData.totalBadges < 5 && 'Participate in more challenges to earn additional badges',
+        'Keep your resume updated with latest projects and achievements',
+        'Contribute to open-source projects to gain real-world experience',
+        'Build a portfolio website to showcase your work professionally'
+      ].filter(Boolean).slice(0, 6)
+    };
+    
+    console.log('✅ Analysis generated successfully');
     res.json(analysis);
     
   } catch (error) {
-    console.error('AI Analysis Error:', error.message);
-    
-    // Graceful fallback
-    res.json({
-      summary: "Analysis temporarily unavailable. Your profile shows good GitHub activity and coding practice.",
-      technicalStrengths: ["Active developer with GitHub presence", "LeetCode practice established"],
-      improvementTips: ["Solve more medium/hard problems", "Deploy projects to showcase live demos", "Add quantifiable achievements"]
+    console.error('❌ Analysis error:', error);
+    res.status(500).json({ 
+      error: 'Analysis failed',
+      details: error.message 
     });
   }
 });

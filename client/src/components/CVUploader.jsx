@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Upload, FileText, Loader2, Sparkles } from 'lucide-react';
-// CVUploader Component
+import { uploadResume, analyzeProfile } from '../services/api';
+
 const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, setAiAnalysis }) => {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -34,21 +35,45 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
     setUploadProgress(0);
     
     try {
-      setUploadProgress(30);
+      console.log('📤 Starting upload for:', file.name);
+      
+      // Upload resume using the imported function
       const uploadResult = await uploadResume(file);
+      console.log('✅ Upload result:', uploadResult);
+      
       setResumeData(uploadResult.parsedData);
       setUploadProgress(70);
 
-      if (githubData || leetcodeData || hackerrankData) {
-        setUploadProgress(90);
-        const analysis = await analyzeProfile(uploadResult.parsedData, githubData, leetcodeData, hackerrankData);
+      // Always trigger AI analysis (works with or without profile data)
+      setUploadProgress(90);
+      console.log('🤖 Starting AI analysis...');
+      
+      try {
+        const analysis = await analyzeProfile(
+          uploadResult.parsedData,
+          githubData,
+          leetcodeData,
+          hackerrankData
+        );
+        
+        console.log('✅ Analysis complete:', analysis);
         setAiAnalysis(analysis);
+      } catch (analysisError) {
+        console.error('⚠️ Analysis failed:', analysisError);
+        // Set basic analysis if API fails
+        setAiAnalysis({
+          summary: `${uploadResult.parsedData.name} has skills in ${uploadResult.parsedData.skills}. Add GitHub/LeetCode profiles for deeper analysis.`,
+          technicalStrengths: [uploadResult.parsedData.skills],
+          improvementTips: ['Add your GitHub profile', 'Start solving LeetCode problems', 'Participate in HackerRank challenges']
+        });
       }
       
       setUploadProgress(100);
+      console.log('✅ All done!');
+      
     } catch (error) {
-      console.error('Upload failed:', error);
-      alert(`Upload failed: ${error.message}`);
+      console.error('❌ Upload error:', error);
+      alert(`Failed to process resume: ${error.message || 'Unknown error'}`);
     } finally {
       setTimeout(() => {
         setUploading(false);
@@ -58,17 +83,17 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
   };
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-6 sm:p-8 border border-gray-700 shadow-2xl">
+    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border border-white/20">
       <div className="flex items-center justify-center gap-3 mb-6">
         <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-blue-400" />
-        <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-100">Upload Resume</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-center">Upload Resume</h2>
       </div>
       
       <div
         className={`relative border-4 border-dashed rounded-2xl p-8 sm:p-12 text-center transition-all duration-300 group cursor-pointer ${
           dragActive
-            ? 'border-blue-500 bg-blue-500/10 scale-105 shadow-2xl'
-            : 'border-gray-700 hover:border-gray-600 hover:bg-gray-800/50'
+            ? 'border-blue-400 bg-blue-500/20 scale-105 shadow-2xl'
+            : 'border-white/30 hover:border-white/50 hover:bg-white/5'
         } ${uploading ? 'opacity-75 cursor-not-allowed' : ''}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -87,14 +112,14 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
           <div className="space-y-4">
             <Loader2 className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-blue-500 animate-spin" />
             <div className="space-y-2">
-              <p className="text-base sm:text-lg font-semibold text-gray-200">Analyzing your profile...</p>
-              <div className="w-full bg-gray-700 rounded-full h-2.5 sm:h-3 overflow-hidden">
+              <p className="text-base sm:text-lg font-semibold">Analyzing your profile...</p>
+              <div className="w-full bg-white/20 rounded-full h-2.5 sm:h-3 overflow-hidden">
                 <div 
                   className="bg-gradient-to-r from-blue-500 to-purple-500 h-full rounded-full transition-all duration-300 shadow-lg"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>
-              <p className="text-xs sm:text-sm text-gray-400">{uploadProgress}%</p>
+              <p className="text-xs sm:text-sm text-gray-300">{uploadProgress}%</p>
             </div>
           </div>
         ) : (
@@ -103,19 +128,19 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
               <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
             </div>
             <div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-2 text-gray-100">Drop your PDF/DOCX</h3>
-              <p className="text-gray-400 text-base sm:text-lg">or click to browse files</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-2">Drop your PDF/DOCX</h3>
+              <p className="text-gray-300 text-base sm:text-lg">or click to browse files</p>
             </div>
-            <p className="text-xs sm:text-sm text-gray-500">Max 5MB • AI analysis included</p>
+            <p className="text-xs sm:text-sm text-gray-400">Max 5MB • AI analysis included</p>
           </div>
         )}
       </div>
 
       {!uploading && (
-        <div className="mt-6 p-3 sm:p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+        <div className="mt-6 p-3 sm:p-4 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-500/30 rounded-xl">
           <div className="flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
-            <p className="font-semibold text-sm sm:text-base text-emerald-300">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300 flex-shrink-0" />
+            <p className="font-semibold text-sm sm:text-base text-emerald-200">
               AI will analyze your resume + profiles automatically!
             </p>
           </div>
@@ -124,4 +149,5 @@ const CVUploader = ({ setResumeData, githubData, leetcodeData, hackerrankData, s
     </div>
   );
 };
+
 export default CVUploader;
