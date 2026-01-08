@@ -4,7 +4,7 @@ import { CheckCircle, Sparkles, TrendingUp } from 'lucide-react';
 import ProfileConnect from './components/ProfileConnect';
 import StatsDisplay from './components/StatsDisplay';
 import CVUploader from './components/CVUploader';
-import { Github, Code2, Award, Loader2 } from 'lucide-react';
+// import { Github, Code2, Award, Loader2 } from 'lucide-react';
 // import { fetchGithubStats, fetchLeetcodeStats, fetchHackerrankStats } from '../services/api';
 import AIAnalysis from './components/AiAnalysis';
 function App() {
@@ -43,7 +43,7 @@ function App() {
         </div>
       </header>
 
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-7xl">
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-[90vw]">
         <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
           {/* Left Column - Inputs */}
           <div className="space-y-6 sm:space-y-8">
