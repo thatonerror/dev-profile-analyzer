@@ -35,6 +35,12 @@ export const fetchLeetcodeStats = async (username) => {
     apiClient.get(`/leetcode/${username}`).then(res => res.data)
   );
 };
+// Add HackerRank function
+export const fetchHackerrankStats = async (username) => {
+  return fetchWithRetry(() => 
+    apiClient.get(`/hackerrank/${username}`).then(res => res.data)
+  );
+};
 
 // Resume Upload
 export const uploadResume = async (file) => {

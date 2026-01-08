@@ -68,6 +68,7 @@ app.use('/api/github', require('./routes/github'));
 app.use('/api/leetcode', require('./routes/leetcode'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/analyze', require('./routes/analyze'));
+app.use('/api/hackerrank', require('./routes/hackerrank'));
 
 // Health check & status
 app.get('/', (req, res) => {
@@ -94,7 +95,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // 404 Handler
-app.use('*', (req, res) => {
+app.use('/', (req, res) => {
   res.status(404).json({ 
     error: 'Route not found',
     path: req.originalUrl 
