@@ -3,11 +3,11 @@ node_modules/
 
 # env
 .env
-
+server/.env
 # build
 dist/
 build/
-
+server/node_modules
 # logs
 npm-debug.log*
 yarn-debug.log*
