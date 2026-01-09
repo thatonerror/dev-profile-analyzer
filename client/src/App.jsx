@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { CheckCircle, Sparkles, TrendingUp } from 'lucide-react';
-// import { CheckCircle } from 'lucide-react'; // ADD THIS IMPORT
 import ProfileConnect from './components/ProfileConnect';
 import StatsDisplay from './components/StatsDisplay';
 import CVUploader from './components/CVUploader';
-// import { Github, Code2, Award, Loader2 } from 'lucide-react';
-// import { fetchGithubStats, fetchLeetcodeStats, fetchHackerrankStats } from '../services/api';
 import AIAnalysis from './components/AiAnalysis';
+import ChatBot from './components/ChatBot'; // ✅ ADD THIS LINE
+
 function App() {
   const [githubData, setGithubData] = useState(null);
   const [leetcodeData, setLeetcodeData] = useState(null);
@@ -33,7 +32,7 @@ function App() {
                 <Sparkles className="relative w-12 h-12 sm:w-16 sm:h-16 text-blue-400" />
               </div>
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black bg-gradient-to-r from-blue-400 via-indigo-900 to-black-400 bg-clip-text text-transparent leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent leading-tight">
               Developer Profile Analyzer
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">
@@ -44,8 +43,10 @@ function App() {
       </header>
 
       <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-[90vw]">
-<div className="grid grid-cols-1 lg:grid-cols-[35%_65%] xl:grid-cols-[30%_70%] gap-6 sm:gap-8 lg:gap-12">          {/* Left Column - Inputs */}
-<div className="space-y-6 sm:space-y-8 min-w-0">            <ProfileConnect 
+        <div className="grid grid-cols-1 lg:grid-cols-[35%_65%] xl:grid-cols-[30%_70%] gap-6 sm:gap-8 lg:gap-12">
+          {/* Left Column - Inputs */}
+          <div className="space-y-6 sm:space-y-8 min-w-0">
+            <ProfileConnect 
               setGithubData={setGithubData}
               setLeetcodeData={setLeetcodeData}
               setHackerrankData={setHackerrankData}
@@ -109,9 +110,17 @@ function App() {
           <p>Powered by AI • Built for Developers</p>
         </div>
       </footer>
+
+      {/* ✅ ADD THIS - Sticky Chatbot */}
+      <ChatBot 
+        githubData={githubData}
+        leetcodeData={leetcodeData}
+        hackerrankData={hackerrankData}
+        resumeData={resumeData}
+        aiAnalysis={aiAnalysis}
+      />
     </div>
   );
 }
-
 
 export default App;
