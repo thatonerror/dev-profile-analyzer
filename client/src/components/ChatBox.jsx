@@ -6,7 +6,7 @@ export default function ChatBot({ githubData, leetcodeData, hackerrankData, resu
   const [messages, setMessages] = useState([
     {
       role: 'model',
-      content: 'Hi! I can help you understand your profile data. Ask me about:\n• Your top GitHub repositories by stars\n• LeetCode progress and stats\n• Resume details and skills\n• AI analysis insights\n• Career recommendations'
+      content: 'Hi! I can help you understand your profile data. Ask me about:\n• Your GitHub repositories and stats\n• LeetCode progress and ranking\n• Resume skills and experience\n• AI analysis insights\n• Career recommendations based on your profile'
     }
   ]);
   const [input, setInput] = useState('');
@@ -30,16 +30,60 @@ export default function ChatBot({ githubData, leetcodeData, hackerrankData, resu
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
 
-    let apiUrl; // Declare apiUrl here so it's accessible in catch block
+    let apiUrl;
 
     try {
-      // Prepare profile data
+      // Prepare comprehensive profile data
       const profileData = {
-        resumeData,
-        githubData,
-        leetcodeData,
-        hackerrankData,
-        aiAnalysis
+        resumeData: resumeData ? {
+          name: resumeData.name,
+          email: resumeData.email,
+          phone: resumeData.phone,
+          skills: resumeData.skills,
+          experience: resumeData.experience,
+          education: resumeData.education,
+          fullText: resumeData.fullText?.substring(0, 1000)
+        } : null,
+        
+        githubData: githubData ? {
+          username: githubData.username,
+          name: githubData.name,
+          publicRepos: githubData.publicRepos,
+          totalStars: githubData.totalStars,
+          followers: githubData.followers,
+          topLanguages: githubData.topLanguages?.map(l => l.language).join(', '),
+          topRepos: githubData.repos?.slice(0, 5).map(r => ({
+            name: r.name,
+            stars: r.stars,
+            language: r.language
+          }))
+        } : null,
+        
+        leetcodeData: leetcodeData ? {
+          username: leetcodeData.username,
+          totalSolved: leetcodeData.totalSolved,
+          easySolved: leetcodeData.easySolved,
+          mediumSolved: leetcodeData.mediumSolved,
+          hardSolved: leetcodeData.hardSolved,
+          ranking: leetcodeData.ranking
+        } : null,
+        
+        hackerrankData: hackerrankData ? {
+          username: hackerrankData.username,
+          challengesSolved: hackerrankData.challengesSolved,
+          totalBadges: hackerrankData.totalBadges,
+          totalStars: hackerrankData.totalStars,
+          badges: hackerrankData.badges?.slice(0, 5)
+        } : null,
+        
+        aiAnalysis: aiAnalysis ? {
+          overallScore: aiAnalysis.overallScore,
+          summary: aiAnalysis.summary,
+          scoreBreakdown: aiAnalysis.scoreBreakdown,
+          technicalStrengths: aiAnalysis.technicalStrengths,
+          improvementAreas: aiAnalysis.improvementAreas,
+          careerRecommendations: aiAnalysis.careerRecommendations
+        } : null
       };
 
       // Construct API URL
@@ -52,7 +96,14 @@ export default function ChatBot({ githubData, leetcodeData, hackerrankData, resu
         apiUrl = `${cleanBaseUrl}/api/chat`;
       }
       
-      console.log('🔗 API URL:', apiUrl);
+      console.log('📞 Calling chat API:', apiUrl);
+      console.log('📦 Profile data summary:', {
+        hasResume: !!profileData.resumeData,
+        hasGithub: !!profileData.githubData,
+        hasLeetcode: !!profileData.leetcodeData,
+        hasHackerrank: !!profileData.hackerrankData,
+        hasAiAnalysis: !!profileData.aiAnalysis
+      });
 
       // Call backend API
       const response = await fetch(apiUrl, {
@@ -81,7 +132,7 @@ export default function ChatBot({ githubData, leetcodeData, hackerrankData, resu
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
+      console.log('✅ Response received');
       
       if (!data.success || !data.message) {
         throw new Error('Invalid response from server');
@@ -90,10 +141,10 @@ export default function ChatBot({ githubData, leetcodeData, hackerrankData, resu
       setMessages(prev => [...prev, { role: 'model', content: data.message }]);
       
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error('❌ Chat error:', error);
       setMessages(prev => [...prev, { 
         role: 'model', 
-        content: `Sorry, I encountered an error: ${error.message}\n\nAPI URL: ${apiUrl || 'Not defined'}`
+        content: `Sorry, I encountered an error: ${error.message}\n\nTip: Make sure you've uploaded your resume and connected at least one profile (GitHub/LeetCode/HackerRank) for better responses.`
       }]);
     } finally {
       setIsLoading(false);
@@ -107,20 +158,42 @@ export default function ChatBot({ githubData, leetcodeData, hackerrankData, resu
     }
   };
 
-  // SUGGESTED QUESTIONS TO ASK THE AI
-  const suggestedQuestions = [
-    "What are my strongest skills based on my profile?",
-    "Which GitHub repositories should I highlight?",
-    "How can I improve my LeetCode ranking?",
-    "What career path suits me best?",
-    "Suggest projects to boost my profile",
-    "Review my resume and give feedback",
-    "Compare my profile with industry standards"
-  ];
+  // Enhanced suggested questions based on available data
+  const getSuggestedQuestions = () => {
+    const questions = [];
+    
+    if (githubData) {
+      questions.push("What are my most popular GitHub repositories?");
+      questions.push("Which programming languages do I use most?");
+    }
+    
+    if (leetcodeData) {
+      questions.push("How can I improve my LeetCode ranking?");
+      questions.push("What types of problems should I focus on?");
+    }
+    
+    if (resumeData) {
+      questions.push("What are my strongest skills based on my resume?");
+      questions.push("How can I improve my resume?");
+    }
+    
+    if (aiAnalysis) {
+      questions.push("What does my overall profile score mean?");
+      questions.push("What are my areas for improvement?");
+      questions.push("What career path suits me best?");
+    }
+    
+    if (questions.length === 0) {
+      questions.push("How can I improve my developer profile?");
+      questions.push("What should I focus on learning next?");
+      questions.push("Tips for building a strong portfolio?");
+    }
+    
+    return questions;
+  };
 
   const askSuggestedQuestion = (question) => {
     setInput(question);
-    // Auto-send after a brief delay
     setTimeout(() => handleSend(), 100);
   };
 
@@ -186,7 +259,7 @@ export default function ChatBot({ githubData, leetcodeData, hackerrankData, resu
               <div className="mt-4">
                 <p className="text-xs text-gray-400 mb-2">Try asking:</p>
                 <div className="flex flex-wrap gap-2">
-                  {suggestedQuestions.slice(0, 3).map((question, idx) => (
+                  {getSuggestedQuestions().slice(0, 3).map((question, idx) => (
                     <button
                       key={idx}
                       onClick={() => askSuggestedQuestion(question)}
@@ -237,4 +310,5 @@ export default function ChatBot({ githubData, leetcodeData, hackerrankData, resu
         </div>
       )}
     </>
-  );}
+  );
+}
