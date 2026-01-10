@@ -1,12 +1,40 @@
 import { useState } from 'react';
-import { CheckCircle, Sparkles, TrendingUp } from 'lucide-react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { CheckCircle, Sparkles, TrendingUp, LogOut } from 'lucide-react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './components/Login';
+import AuthCallback from './components/AuthCallback';
 import ProfileConnect from './components/ProfileConnect';
 import StatsDisplay from './components/StatsDisplay';
 import CVUploader from './components/CVUploader';
 import AIAnalysis from './components/AiAnalysis';
-import ChatBot from './components/ChatBot'; // ✅ ADD THIS LINE
+import ChatBot from './components/ChatBot';
 
-function App() {
+// Protected Route Component
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-950 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <Sparkles className="w-16 h-16 text-purple-400 animate-pulse mx-auto mb-4" />
+          <p className="text-slate-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
+// Dashboard Component
+function Dashboard() {
+  const { user, logout } = useAuth();
   const [githubData, setGithubData] = useState(null);
   const [leetcodeData, setLeetcodeData] = useState(null);
   const [hackerrankData, setHackerrankData] = useState(null);
@@ -25,6 +53,30 @@ function App() {
       {/* Header */}
       <header className="relative border-b border-white/10 backdrop-blur-xl bg-white/5">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 max-w-7xl">
+          <div className="flex justify-between items-start mb-6">
+            {/* User Info */}
+            <div className="flex items-center gap-4">
+              <img 
+                src={user?.picture} 
+                alt={user?.name}
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-purple-500"
+              />
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-white">{user?.name}</h2>
+                <p className="text-sm text-slate-400">{user?.email}</p>
+              </div>
+            </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/50 px-4 py-2 rounded-xl transition text-sm sm:text-base"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
+
           <div className="text-center space-y-4 sm:space-y-6">
             <div className="flex justify-center mb-4">
               <div className="relative">
@@ -111,7 +163,7 @@ function App() {
         </div>
       </footer>
 
-      {/* ✅ ADD THIS - Sticky Chatbot */}
+      {/* Chatbot */}
       <ChatBot 
         githubData={githubData}
         leetcodeData={leetcodeData}
@@ -120,6 +172,33 @@ function App() {
         aiAnalysis={aiAnalysis}
       />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Login />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          
+          {/* Protected Routes */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Catch all - redirect to login */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
