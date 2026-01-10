@@ -15,6 +15,12 @@ export default function AIAnalysis({ analysis }) {
     return 'from-orange-900/30 to-red-900/30 border-orange-500/30';
   };
 
+  const getStrokeColor = (score) => {
+    if (score >= 70) return '#34d399'; // emerald-400
+    if (score >= 40) return '#fbbf24'; // yellow-400
+    return '#fb923c'; // orange-400
+  };
+
   // Safe access with defaults
   const overallScore = analysis.overallScore || 0;
   const scoreBreakdown = analysis.scoreBreakdown || { resume: 0, github: 0, leetcode: 0, hackerrank: 0 };
@@ -22,6 +28,11 @@ export default function AIAnalysis({ analysis }) {
   const technicalStrengths = analysis.technicalStrengths || [];
   const improvementAreas = analysis.improvementAreas || [];
   const careerRecommendations = analysis.careerRecommendations || [];
+
+  // Circle calculations
+  const radius = 56;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (overallScore / 100) * circumference;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -34,34 +45,39 @@ export default function AIAnalysis({ analysis }) {
 
         {/* Overall Score Circle */}
         <div className="flex flex-col sm:flex-row items-center gap-6 mb-6">
-          <div className="relative">
-            <svg className="w-32 h-32 transform -rotate-90">
+          <div className="relative w-32 h-32 flex items-center justify-center">
+            {/* Background Circle */}
+            <svg className="w-full h-full -rotate-90 absolute" viewBox="0 0 128 128">
               <circle
                 cx="64"
                 cy="64"
-                r="56"
-                stroke="currentColor"
+                r={radius}
+                stroke="rgba(255, 255, 255, 0.1)"
                 strokeWidth="8"
                 fill="none"
-                className="text-white/10"
               />
+              {/* Progress Circle */}
               <circle
                 cx="64"
                 cy="64"
-                r="56"
-                stroke="currentColor"
+                r={radius}
+                stroke={getStrokeColor(overallScore)}
                 strokeWidth="8"
                 fill="none"
-                strokeDasharray={`${2 * Math.PI * 56}`}
-                strokeDashoffset={`${2 * Math.PI * 56 * (1 - overallScore / 100)}`}
-                className={getScoreColor(overallScore)}
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
                 strokeLinecap="round"
+                className="transition-all duration-1000 ease-out"
               />
             </svg>
+            {/* Score Text */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`text-4xl font-black ${getScoreColor(overallScore)}`}>
-                {overallScore}
-              </span>
+              <div className="text-center">
+                <span className={`text-4xl font-black ${getScoreColor(overallScore)}`}>
+                  {overallScore}
+                </span>
+                <div className="text-xs text-slate-400 font-medium">/ 100</div>
+              </div>
             </div>
           </div>
           
@@ -113,7 +129,7 @@ export default function AIAnalysis({ analysis }) {
                   </div>
                   <div className="w-full bg-white/10 rounded-full h-2 mb-2">
                     <div 
-                      className={`h-2 rounded-full ${(platformData.score || 0) >= 70 ? 'bg-emerald-400' : (platformData.score || 0) >= 40 ? 'bg-yellow-400' : 'bg-orange-400'}`}
+                      className={`h-2 rounded-full transition-all duration-1000 ${(platformData.score || 0) >= 70 ? 'bg-emerald-400' : (platformData.score || 0) >= 40 ? 'bg-yellow-400' : 'bg-orange-400'}`}
                       style={{ width: `${platformData.score || 0}%` }}
                     ></div>
                   </div>
