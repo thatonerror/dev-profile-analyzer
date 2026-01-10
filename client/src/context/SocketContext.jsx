@@ -1,4 +1,3 @@
-// client/src/context/SocketContext.jsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
@@ -17,8 +16,15 @@ export const SocketProvider = ({ children }) => {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    // Initialize socket connection
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    // Get base URL without /api
+    let apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    
+    // Remove /api suffix if present
+    if (apiUrl.endsWith('/api')) {
+      apiUrl = apiUrl.replace(/\/api$/, '');
+    }
+    
+    console.log('🔌 Connecting socket to:', apiUrl);
     
     const newSocket = io(apiUrl, {
       transports: ['websocket', 'polling'],
@@ -44,7 +50,6 @@ export const SocketProvider = ({ children }) => {
 
     setSocket(newSocket);
 
-    // Cleanup on unmount
     return () => {
       newSocket.close();
     };

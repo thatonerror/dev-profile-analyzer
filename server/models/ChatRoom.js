@@ -1,32 +1,11 @@
-/ server/models/ChatRoom.js
 const mongoose = require('mongoose');
 
-const messageSchema = new mongoose.Schema({
-  sender: {
-    name: String,
-    email: String,
-    role: {
-      type: String,
-      enum: ['recruiter', 'candidate', 'employer']
-    }
-  },
-  message: String,
-  timestamp: {
-    type: Date,
-    default: Date.now
-  }
-});
-
 const chatRoomSchema = new mongoose.Schema({
-  roomId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  candidateId: {
-    type: mongoose.Schema.Types.ObjectId,
+  roomId: { type: String, required: true, unique: true },
+  candidateId: { 
+    type: mongoose.Schema.Types.ObjectId, 
     ref: 'Candidate',
-    required: true
+    required: true 
   },
   participants: {
     recruiter: {
@@ -45,16 +24,21 @@ const chatRoomSchema = new mongoose.Schema({
       joinedAt: Date
     }
   },
-  messages: [messageSchema],
+  messages: [{
+    sender: {
+      name: String,
+      email: String,
+      role: { type: String, enum: ['recruiter', 'candidate', 'employer'] }
+    },
+    message: String,
+    timestamp: { type: Date, default: Date.now }
+  }],
   status: {
     type: String,
     enum: ['active', 'closed'],
     default: 'active'
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+  createdAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('ChatRoom', chatRoomSchema);

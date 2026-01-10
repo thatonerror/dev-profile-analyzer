@@ -1,4 +1,3 @@
-// server/routes/verification.js
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const Candidate = require('../models/Candidate');
@@ -151,8 +150,7 @@ router.get('/list', async (req, res) => {
   } catch (error) {
     console.error('❌ List error:', error);
     res.status(500).json({ 
-      success: false, 
-      error: 'Failed to fetch verifications',
+      success: false,       error: 'Failed to fetch verifications',
       details: error.message 
     });
   }

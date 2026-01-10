@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { CheckCircle, Sparkles, TrendingUp, LogOut } from 'lucide-react';
+import { CheckCircle, Sparkles, TrendingUp, LogOut, UserCheck } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import Login from './components/Login';
 import AuthCallback from './components/AuthCallback';
 import ProfileConnect from './components/ProfileConnect';
@@ -9,6 +10,14 @@ import StatsDisplay from './components/StatsDisplay';
 import CVUploader from './components/CVUploader';
 import AIAnalysis from './components/AiAnalysis';
 import ChatBot from './components/ChatBot';
+import SocketTest from './components/SocketTest';
+// import SocketRoom from './components/SocketRoom';
+import CandidateForm from './components/CandidateForm';
+
+// Import verification components (we'll create these next)
+// Uncomment when files are created:
+// import CandidateForm from './components/verification/CandidateForm';
+// import ChatRoom from './components/verification/ChatRoom';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -67,14 +76,23 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Logout Button */}
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/50 px-4 py-2 rounded-xl transition text-sm sm:text-base"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <a
+                href="/verification/new"
+                className="flex items-center gap-2 bg-green-600/20 hover:bg-green-600/30 border border-green-500/50 px-4 py-2 rounded-xl transition text-sm"
+              >
+                <UserCheck className="w-4 h-4" />
+                <span className="hidden sm:inline">New Verification</span>
+              </a>
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/50 px-4 py-2 rounded-xl transition text-sm"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
           </div>
 
           <div className="text-center space-y-4 sm:space-y-6">
@@ -88,7 +106,7 @@ function Dashboard() {
               Developer Profile Analyzer
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">
-              AI-powered professional evaluation combining GitHub, LeetCode, HackerRank & Resume Analysis
+              AI-powered professional evaluation + Real-time Background Verification
             </p>
           </div>
         </div>
@@ -159,7 +177,7 @@ function Dashboard() {
       {/* Footer */}
       <footer className="relative border-t border-white/10 mt-12 sm:mt-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl text-center text-slate-400 text-sm">
-          <p>Powered by AI • Built for Developers</p>
+          <p>Powered by AI • Built for Developers • Real-time Verification</p>
         </div>
       </footer>
 
@@ -179,24 +197,45 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Login />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          
-          {/* Protected Routes */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Catch all - redirect to login */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <SocketProvider>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Login />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            
+            {/* Socket.IO Test - PUBLIC (no auth needed) */}
+            <Route path="/socket-test" element={<SocketTest />} />
+            
+            {/* Chat Room - Public (anyone with link) */}
+            {/* Uncomment when ChatRoom component is created:
+            <Route path="/chat/:roomId" element={<ChatRoom />} />
+            */}
+            
+            {/* Protected Routes */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Uncomment when CandidateForm component is created: */}
+            <Route 
+              path="/verification/new" 
+              element={
+                <ProtectedRoute>
+                  <CandidateForm/>
+                </ProtectedRoute>
+              } 
+            />
+           
+            
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </SocketProvider>
       </AuthProvider>
     </BrowserRouter>
   );
